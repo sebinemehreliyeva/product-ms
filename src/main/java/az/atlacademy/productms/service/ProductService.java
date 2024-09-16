@@ -1,15 +1,13 @@
 package az.atlacademy.productms.service;
 
-import az.atlacademy.productms.entity.Product;
-
-import java.util.List;
-import java.util.Optional;
+import az.atlacademy.productms.model.request.SaveProductDto;
+import az.atlacademy.productms.model.response.ProductResponseDto;
 
 public interface ProductService {
-    Product createProduct(Product product);
-    Optional<Product> getProductById(Long id);
-    List<Product> getAllProducts();
-    Product updateProduct(Long id, Product product);
-    void deleteProduct(Long id);
+    void saveProduct(SaveProductDto dto);
+
+    ProductResponseDto getResponseById(Long id);
+
+    void reduceProductCount(Long id, Integer count);
 }
 

@@ -1,51 +1,45 @@
 package az.atlacademy.productms.service.impl;
 
-import az.atlacademy.productms.entity.Product;
-import az.atlacademy.productms.repository.ProductRepository;
+import az.atlacademy.productms.dao.entity.ProductEntity;
+import az.atlacademy.productms.dao.entity.repository.ProductRepository;
+import az.atlacademy.productms.exception.ProductNotFoundException;
+import az.atlacademy.productms.mapper.ProductMapper;
+import az.atlacademy.productms.model.request.SaveProductDto;
+import az.atlacademy.productms.model.response.ProductResponseDto;
 import az.atlacademy.productms.service.ProductService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import static az.atlacademy.productms.model.ErrorMessage.PRODUCT_NOT_FOUND;
 
 @Service
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
-
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
     @Override
-    public Product createProduct(Product product) {
-        return productRepository.save(product);
+    public void saveProduct(SaveProductDto dto) {
+        var entity = ProductMapper.PRODUCT_MAPPER.buildProductEntity(dto);
+        productRepository.save(entity);
     }
 
     @Override
-    public Optional<Product> getProductById(Long id) {
-        return productRepository.findById(id);
+    public ProductResponseDto getResponseById(Long id) {
+        var entity = fetchProductIfExist(id);
+        return ProductMapper.PRODUCT_MAPPER.buildProductResponseDto(entity);
     }
 
     @Override
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public void reduceProductCount(Long id, Integer count) {
+        var entity = fetchProductIfExist(id);
+        var updatedCount = entity.getCount() - count;
+        entity.setCount(updatedCount);
+        productRepository.save(entity);
     }
 
-    @Override
-    public Product updateProduct(Long id, Product product) {
-        Optional<Product> existingProduct = productRepository.findById(id);
-        if (existingProduct.isPresent()) {
-            Product updatedProduct = existingProduct.get();
-            updatedProduct.setName(product.getName());
-            updatedProduct.setPrice(product.getPrice());
-            updatedProduct.setCount(product.getCount());
-            return productRepository.save(updatedProduct);
-        }
-        return null;
-    }
-
-    @Override
-    public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+    private ProductEntity fetchProductIfExist(Long id) {
+        return productRepository.findById(id).orElseThrow(
+                () -> new ProductNotFoundException(PRODUCT_NOT_FOUND.format(id))
+        );
     }
 }
-

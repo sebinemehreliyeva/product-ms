@@ -1,44 +1,36 @@
 package az.atlacademy.productms.controller;
 
-import az.atlacademy.productms.entity.Product;
+import az.atlacademy.productms.model.request.SaveProductDto;
+import az.atlacademy.productms.model.response.ProductResponseDto;
 import az.atlacademy.productms.service.ProductService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
+import static org.springframework.http.HttpStatus.*;
+
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("api/v1/products")
+@RequiredArgsConstructor
 public class ProductController {
-
-    @Autowired
-    private ProductService productService;
-
-    @PostMapping
-    public Product createProduct(@RequestBody Product product) {
-        return productService.createProduct(product);
-    }
+    private final ProductService productService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Optional<Product> product = productService.getProductById(id);
-        return product.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<ProductResponseDto> getProductById(@PathVariable Long id) {
+        return ResponseEntity.status(OK).body(productService.getResponseById(id));
     }
 
-    @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    @PostMapping
+    public ResponseEntity<Void> saveProduct(@RequestBody SaveProductDto dto) {
+        productService.saveProduct(dto);
+        return ResponseEntity.status(CREATED).build();
     }
 
-    @PutMapping("/{id}")
-    public Product updateProduct(@PathVariable Long id, @RequestBody Product product) {
-        return productService.updateProduct(id, product);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
+    @PostMapping("reduce/{id}")
+    public ResponseEntity<Void> reduceProductCount(@Valid @PathVariable Long id, @RequestParam Integer count) {
+        productService.reduceProductCount(id, count);
+        return ResponseEntity.status(NO_CONTENT).build();
     }
 }
